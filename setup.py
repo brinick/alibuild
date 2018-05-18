@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-""" Package alibuild using setuptools
-"""
+"""Package alibuild using setuptools"""
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
-import sys
 
 here = path.abspath(path.dirname(__file__))
 
@@ -18,19 +16,20 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 # Extra Python packages to install conditionally
 install_conditional = []
 try:
-  from collections import OrderedDict
+    from collections import OrderedDict
 except ImportError:
-  install_conditional = [ "ordereddict" ]
+    install_conditional = ["ordereddict"]
 
 setup(
     name='alibuild',
 
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
-    # the version across setup.py and the project code, see
+    # Versions should comply with PEP440.  For a discussion on
+    # single-sourcing the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
     #
-    # LAST_TAG is actually a placeholder which will be automatically replaced by 
-    # the release-alibuild pipeline in jenkins whenever we need a new release.
+    # LAST_TAG is actually a placeholder which will be automatically
+    # replaced by the release-alibuild pipeline in jenkins whenever
+    # we need a new release.
     version='LAST_TAG',
 
     description='ALICE Build Tool',
@@ -82,7 +81,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['pyyaml','argparse'] + install_conditional,
+    install_requires=['pyyaml', 'argparse'] + install_conditional,
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -102,5 +101,5 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    scripts = ["aliBuild", "alienv", "aliDoctor", "aliDeps", "pb"]
+    scripts=["aliBuild", "alienv", "aliDoctor", "aliDeps", "pb"]
 )

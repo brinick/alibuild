@@ -5,22 +5,22 @@ try:
 except ImportError:
     from mock import patch, call  # Python 2
 
+import unittest
+
 from alibuild_helpers.cmd import execute
 
-import mock
-import unittest
-import traceback
 
 class CmdTestCase(unittest.TestCase):
-    @mock.patch("alibuild_helpers.cmd.debug")
+    @patch("alibuild_helpers.cmd.debug")
     def test_execute(self, mock_debug):
-      err = execute("echo foo", mock_debug)
-      self.assertEqual(err, 0)
-      self.assertEqual(mock_debug.mock_calls, [call('foo'), call('')])
-      mock_debug.reset_mock()
-      err = execute("echoo 2> /dev/null", mock_debug)
-      self.assertEqual(err, 127)
-      self.assertEqual(mock_debug.mock_calls, [call('')])
+        err = execute("echo foo", mock_debug)
+        self.assertEqual(err, 0)
+        self.assertEqual(mock_debug.mock_calls, [call('foo'), call('')])
+        mock_debug.reset_mock()
+        err = execute("echoo 2> /dev/null", mock_debug)
+        self.assertEqual(err, 127)
+        self.assertEqual(mock_debug.mock_calls, [call('')])
+
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from __future__ import print_function
 import os
 import sys
@@ -7,8 +8,12 @@ import logging
 import traceback
 
 from os.path import exists, expanduser
-from alibuild_helpers.analytics import decideAnalytics, askForAnalytics, report_screenview, report_exception, report_event
-from alibuild_helpers.analytics import enable_analytics, disable_analytics
+
+from alibuild_helpers.analytics import (
+    decideAnalytics, askForAnalytics,
+    enable_analytics, disable_analytics,
+    report_screenview, report_exception, report_event
+)
 from alibuild_helpers.args import doParseArgs
 from alibuild_helpers.init import doInit
 from alibuild_helpers.clean import doClean
@@ -20,122 +25,139 @@ from alibuild_helpers.build import doBuild, star
 
 
 def doMain(args, parser):
-  # We need to unset BASH_ENV because in certain environments (e.g.
-  # NERSC) this is used to source a (non -e safe) bashrc, effectively
-  # breaking aliBuild.
-  # We set all the locale related environment to C to make sure
-  # do not get fooled when parsing localized messages.
-  # We set ALIBUILD_ARCHITECTURE so that it's picked up by the external
-  # command which does the reporting.
-  ENVIRONMENT_OVERRIDES = {
-    "LANG": "C",
-    "LANGUAGE": "C",
-    "LC_ALL": "C",
-    "LC_COLLATE": "C",
-    "LC_CTYPE": "C",
-    "LC_MESSAGES": "C",
-    "LC_MONETARY": "C",
-    "LC_NUMERIC": "C",
-    "LC_TIME": "C",
-    "LC_ALL": "C",
-    "GREP_OPTIONS": "",
-    "BASH_ENV": "",
-    "ALIBUILD_ARCHITECTURE": args.architecture
-  }
-  os.environ.update(ENVIRONMENT_OVERRIDES)
-  report_screenview(args.action)
+    # We need to unset BASH_ENV because in certain environments (e.g.
+    # NERSC) this is used to source a (non -e safe) bashrc, effectively
+    # breaking aliBuild.
+    # We set all the locale related environment to C to make sure
+    # do not get fooled when parsing localized messages.
+    # We set ALIBUILD_ARCHITECTURE so that it's picked up by the external
+    # command which does the reporting.
+    ENVIRONMENT_OVERRIDES = {
+        "LANG": "C",
+        "LANGUAGE": "C",
+        "LC_ALL": "C",
+        "LC_COLLATE": "C",
+        "LC_CTYPE": "C",
+        "LC_MESSAGES": "C",
+        "LC_MONETARY": "C",
+        "LC_NUMERIC": "C",
+        "LC_TIME": "C",
+        "LC_ALL": "C",
+        "GREP_OPTIONS": "",
+        "BASH_ENV": "",
+        "ALIBUILD_ARCHITECTURE": args.architecture
+    }
 
-  # Move to the specified working directory before doing anything else
-  if "chdir" in args:
-    try:
-      os.chdir(os.path.expanduser(args.chdir))
-      debug("Current working directory is %s" % os.getcwd())
-    except Exception as e:
-      warning("Cannot change to directory \"%s\", is it readable by you?" % args.chdir)
+    os.environ.update(ENVIRONMENT_OVERRIDES)
+    report_screenview(args.action)
 
-  if args.action == "version":
-    print("aliBuild version: %s (%s)" % (getVersion(), args.architecture if args.architecture else "unknown"))
-    sys.exit(0)
+    # Move to the specified working directory before doing anything else
+    if "chdir" in args:
+        try:
+            os.chdir(os.path.expanduser(args.chdir))
+            debug("Current working directory is %s" % os.getcwd())
+        except Exception as e:
+            msg = ("Cannot change to directory \"{0}\","
+                   "is it readable by you?".format(args.chdir))
+            warning(msg)
 
-  if args.action == "doctor":
-    doDoctor(args, parser)
+    if args.action == "version":
+        arch = args.architecture if args.architecture else "unknown"
+        print("aliBuild version: %s (%s)" % (getVersion(), arch))
+        sys.exit(0)
 
-  if args.action == "deps":
-    deps(recipesDir=args.distDir,
-         topPackage=args.topPackage,
-         outFile=args.outFile,
-         buildRequires=args.buildRequires,
-         transitiveRed=args.neat,
-         disable=args.disable) and sys.exit(0) or sys.exit(1)
+    if args.action == "doctor":
+        doDoctor(args, parser)
 
-  logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
+    if args.action == "deps":
+        deps(recipesDir=args.distDir,
+             topPackage=args.topPackage,
+             outFile=args.outFile,
+             buildRequires=args.buildRequires,
+             transitiveRed=args.neat,
+             disable=args.disable) and sys.exit(0) or sys.exit(1)
 
-  if args.action == "clean":
-    doClean(workDir=args.workDir, architecture=args.architecture, aggressiveCleanup=args.aggressiveCleanup, dryRun=args.dryRun)
-    exit(0)
+    logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
 
-  # Setup build environment.
-  if args.action == "init":
-    doInit(args)
-    exit(0)
+    if args.action == "clean":
+        doClean(workDir=args.workDir,
+                architecture=args.architecture,
+                aggressiveCleanup=args.aggressiveCleanup,
+                dryRun=args.dryRun)
+        exit(0)
 
-  if args.action == "build":
-    printer, msg, code = doBuild(args, parser)
-    printer(msg)
-    exit(code)
+    # Setup build environment.
+    if args.action == "init":
+        doInit(args)
+        exit(0)
+
+    if args.action == "build":
+        printer, msg, code = doBuild(args, parser)
+        printer(msg)
+        exit(code)
+
 
 if __name__ == "__main__":
-  args, parser = doParseArgs(star())
+    args, parser = doParseArgs(star())
 
-  # This is valid for everything
-  logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
+    # This is valid for everything
+    logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
 
-  os.environ["ALIBUILD_ANALYTICS_ID"] = "UA-77346950-1"
-  os.environ["ALIBUILD_VERSION"] = getVersion()
-  if args.action == "analytics":
-    if args.state == "off":
-      disable_analytics()
+    os.environ["ALIBUILD_ANALYTICS_ID"] = "UA-77346950-1"
+    os.environ["ALIBUILD_VERSION"] = getVersion()
+
+    if args.action == "analytics":
+        if args.state == "off":
+            disable_analytics()
+        else:
+            enable_analytics()
+        exit(0)
+    elif args.action == "architecture":
+        arch = detectArch()
+        print(arch if arch else "<unknown>")
+        exit(0)
+
+    if not decideAnalytics(
+        exists(expanduser("~/.config/alibuild/disable-analytics")),
+        exists(expanduser("~/.config/alibuild/analytics-uuid")),
+        sys.stdout.isatty(),
+        askForAnalytics
+    ):
+        os.environ["ALIBUILD_NO_ANALYTICS"] = "1"
     else:
-      enable_analytics()
-    exit(0)
-  elif args.action == "architecture":
-    arch = detectArch()
-    print(arch if arch else "<unknown>")
-    exit(0)
+        f = open(expanduser("~/.config/alibuild/analytics-uuid")).read()
+        os.environ["ALIBUILD_ANALYTICS_USER_UUID"] = f.strip()
 
-  if not decideAnalytics(exists(expanduser("~/.config/alibuild/disable-analytics")),
-                         exists(expanduser("~/.config/alibuild/analytics-uuid")),
-                         sys.stdout.isatty(),
-                         askForAnalytics):
-    os.environ["ALIBUILD_NO_ANALYTICS"] = "1"
-  else:
-    os.environ["ALIBUILD_ANALYTICS_USER_UUID"] = open(expanduser("~/.config/alibuild/analytics-uuid")).read().strip()
-  try:
-    profiler = "--profile" in sys.argv
-    if profiler:
-      print("profiler started")
-      import cProfile, pstats
-      try:
-        from StringIO import StringIO
-      except ImportError:
-        from io import StringIO
-      pr = cProfile.Profile()
-      pr.enable()
-      def profiler():
-        pr.disable()
-        print("profiler stopped")
-        s = StringIO()
-        sortby = 'time'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print(s.getvalue())
-      atexit.register(profiler)
-    doMain(args, parser)
-  except KeyboardInterrupt as e:
-    info(str(e))
-    report_event("user", "ctrlc")
-    exit(1)
-  except Exception as e:
-    traceback.print_exc()
-    report_exception(e)
-    exit(1)
+    try:
+        profiler = "--profile" in sys.argv
+        if profiler:
+            print("profiler started")
+            import cProfile
+            import pstats
+            try:
+                from StringIO import StringIO
+            except ImportError:
+                from io import StringIO
+            pr = cProfile.Profile()
+            pr.enable()
+
+            def profiler():
+                pr.disable()
+                print("profiler stopped")
+                s = StringIO()
+                sortby = 'time'
+                ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+                ps.print_stats()
+                print(s.getvalue())
+            atexit.register(profiler)
+
+        doMain(args, parser)
+
+    except KeyboardInterrupt as e:
+        info(str(e))
+        report_event("user", "ctrlc")
+        exit(1)
+    except Exception as e:
+        traceback.print_exc()
+        report_exception(e)
+        exit(1)
